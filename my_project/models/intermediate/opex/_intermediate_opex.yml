@@ -1,0 +1,56 @@
+version: 2
+
+models:
+
+  - name: intermediate_opex__gcp_billing
+    description: >
+      Transformed version of the GCP billing export. Credits have been
+      unnested and converted into separate line items (credit.amount
+      is moved into cost, so a simple sum over the cost field yields
+      the total billable cost).
+    columns:
+      - name: export_time
+      - name: export_date
+      - name: billing_account_id
+      - name: service_id
+      - name: service_description
+      - name: sku_id
+      - name: sku_description
+      - name: cost_type
+      - name: line_item_type
+        description: "Type of item: gross or credit"
+      - name: usage_start_time
+      - name: usage_end_time
+      - name: usage_date
+      - name: invoice_month
+      - name: location
+      - name: country
+      - name: region
+      - name: zone
+      - name: environment
+      - name: cost_metric_type
+        description: >
+          Describes the nature of the line item (either GROSS_COST or else
+          one of the GCP standard credit types.
+      - name: cost_metric_subtype
+        description: >
+          Either 'Gross cost' or 'Credit: <name of credit>', depending on the
+          line_item_type. If a Credit, this provides a more fine-grained
+          description than cost_metric_type.
+      - name: cost
+        description: >
+          The total cost associated with the line-item (could be negative,
+          especially since line-items include costs AND credits in this model)
+      - name: currency
+      - name: currency_conversion_rate
+      - name: usage_amount
+      - name: usage_unit
+      - name: usage_amount_in_pricing_units
+      - name: usage_pricing_unit
+      - name: adjustment_id
+      - name: adjustment_description
+      - name: adjustment_mode
+      - name: project
+      - name: resource_labels
+      - name: system_labels
+      - name: tags

@@ -1,0 +1,199 @@
+version: 2
+
+models:
+
+  - name: base_gcp_billing__breakdown
+    description: >
+      Base table for GCP standard billing export. Some flattening applied.
+      Each record denotes a single billing record, with any associated
+      credits attached. Costs are usually positive. Some costs are zero
+      (and have credits attached), or even negative (e.g. refunds). Most
+      credits are negative (money back), but not all. Some rows appear
+      duplicated; the standard export doesn't contain resource-level data
+      so it's possible for two line items to be indistinguishable.
+    columns:
+      - name: export_time
+        description: "The time at which the line-item was exported"
+        tests:
+          - not_null
+      - name: export_date
+        description: "The date on which the line-item was exported"
+        tests:
+          - not_null
+      - name: billing_account_id
+        description: "ID for the billing account"
+        tests:
+          - not_null
+      - name: service_id
+        description: "ID for the service associated with the bill"
+        tests:
+          - not_null
+      - name: service_description
+        description: "Name of the service associated with the bill"
+        tests:
+          - not_null
+      - name: sku_id
+        description: "ID for the stock-keeping unit (SKU) associated with the bill"
+        tests:
+          - not_null
+      - name: sku_description
+        description: "Name of the SKU associated with the bill"
+        tests:
+          - not_null
+      - name: cost_type
+        description: >
+          Category the cost falls into (adjustment, regular, rounding_error, tax)
+        tests:
+          - not_null
+          - accepted_values:
+              values: [adjustment, regular, rounding_error, tax]
+      - name: usage_start_time
+        description: >
+          Usage is billed for a particular hour. This is the timestamp
+          (date and time) at the start of the hour associated with the bill.
+        tests:
+          - not_null
+      - name: usage_end_time
+        description: >
+          Usage is billed for a particular hour. This is the timestamp
+          (date and time) at the end of the hour associated with the bill.
+        tests:
+          - not_null
+      - name: usage_date
+        description: "Date associated with the bill (from usage_start_time)"
+        tests:
+          - not_null
+      - name: invoice_month
+        description: >
+          The month of the invoice in which the bill was included
+          (rendered as a date indicating the start of the month)
+        tests:
+          - not_null
+      - name: location
+        description: >
+          Location of usage at the level of a multi-region, country, region,
+          or zone; or global for resources that have no specific location.
+      - name: country
+        description: "Country ID, if location is a country"
+      - name: region
+        description: "Region ID, if location is a region"
+      - name: zone
+        description: "Zone ID, if location is a zone"
+      - name: environment
+        description: "Environment label (e.g. beta, rc, live), if applicable"
+      - name: cost
+        description: >
+          The gross cost of the usage before any credits (to a precision of
+          up to six decimal places). To get the total cost including credits,
+          any credits.amount should be added to cost.
+        tests:
+          - not_null
+      - name: currency
+        description: "The currency in which the cost is specified"
+        tests:
+          - not_null
+      - name: currency_conversion_rate
+        description: >
+          USD -> CURRENCY conversion factor. Divide 'cost' by this to obtain
+          cost in USD.
+        tests:
+          - not_null
+      - name: usage_amount
+        description: >
+          Quantity of resource usage (i.e. what we are being billed for).
+          Note that not all cost types are associated with this (e.g.
+          rounding error corrections are implemented as a zero-usage cost).
+      - name: usage_unit
+        description: >
+          What the number given as usage_amount denotes (e.g. number of
+          requests, number of bytes processed, etc)
+        tests:
+          - accepted_values:
+              values:
+                - byte-seconds
+                - bytes
+                - requests
+                - bytes
+      - name: usage_amount_in_pricing_units
+        description: >
+          Pricing units are often different from usage units (e.g. usage
+          measured by the byte, billed by the tebibyte) - this is the
+          amount translated into pricing units
+      - name: usage_pricing_unit
+        description: >
+          Pricing units are often different from usage units (e.g. usage
+          measured in bytes, billed by the tebibyte) - this indicates
+          what the number given as usage_amount_in_pricing_units denotes.
+        tests:
+          - accepted_values:
+              values:
+                - byte
+                - mebibyte
+                - gibibyte
+                - tebibyte
+                - count
+                - gibibyte
+                - gibibyte second
+                - gibibyte hour
+                - gibibyte day
+                - gibibyte month
+                - second
+                - minute
+                - hour
+                - day
+                - month
+      - name: adjustment_id
+        description: >
+          If present, indicates that an adjustment is associated with
+          the line item. This ID will identify any and all adjustments
+          caused by a specific issue.
+      - name: adjustment_description
+        description: "A description of the adjustment and its cause."
+      - name: adjustment_mode
+        description: "How the adjustment was issued"
+        tests:
+          - accepted_values:
+              values:
+                - PARTIAL_CORRECTION
+                - COMPLETE_NEGATION_WITH_REMONETIZATION
+                - COMPLETE_NEGATION
+                - MANUAL_ADJUSTMENT
+      - name: adjustment_type
+        description: "The type of adjustment being made"
+        tests:
+          - accepted_values:
+              values:
+                - USAGE_CORRECTION
+                - PRICE_CORRECTION
+                - METADATA_CORRECTION
+                - GOODWILL
+                - SALES_BASED_GOODWILL
+                - SLA_VIOLATION
+                - BALANCE_TRANSFER
+                - ACCOUNT_CLOSURE
+                - GENERAL_ADJUSTMENT
+      - name: project
+        description: >
+          Structure containing fields that describe the Cloud Billing project:
+          ID, number, name, ancestry_numbers, ancestors (nested),
+          and labels (key, value fields).
+        tests:
+          - not_null
+      - name: resource_labels
+        description: >
+          Array containing key, value pairs for labels applied to
+          GCP resources associated with the bill
+      - name: system_labels
+        description: >
+          Array containing key, value pairs for important system-generated
+          metadata about the resource associated with the bill
+      - name: credits
+        description: >
+          Array containing any credits that should be applied to the (gross)
+          cost described in each record in order to obtain the total billable
+          cost.
+      - name: tags
+        description: >
+          Array containing (key, value, namespace, inherited) quads associated
+          with the GCP resource (note that these fields are always empty in
+          our export).

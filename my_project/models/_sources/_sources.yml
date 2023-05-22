@@ -1,0 +1,42 @@
+version: 2
+
+sources:
+
+  - name: gcp_billing
+    description: "GCP Billing data exported from our Project"
+    database: your_project_id
+    schema: gcp_billing
+    tables:
+
+      - name: billing_export
+        identifier: gcp_billing_export_v1_your_billing_id
+        loaded_at_field: _PARTITIONTIME
+        freshness:
+          warn_after:
+            count: 24
+            period: hour
+          error_after:
+            count: 36
+            period: hour
+
+      - name: detailed_billing_export
+        identifier: gcp_billing_export_resource_v1_your_billing_id
+        loaded_at_field: _PARTITIONTIME
+        freshness:
+          warn_after:
+            count: 24
+            period: hour
+          error_after:
+            count: 36
+            period: hour
+
+      - name: pricing_export
+        identifier: cloud_pricing_export
+        loaded_at_field: _PARTITIONTIME
+        freshness:
+          warn_after:
+            count: 24
+            period: hour
+          error_after:
+            count: 36
+            period: hour
